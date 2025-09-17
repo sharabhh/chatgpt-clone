@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.14",
+    "ai": "^5.0.45",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
     "next": "15.5.3",
