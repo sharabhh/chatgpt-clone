@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import MessageBubble from "../components/MessageBubble";
+import TypingBubble from "../components/TypingBubble";
+import axios from "axios";
 
 const initialMessages = [
   { id: "m1", role: "assistant", content: "How can I help you today?" },
@@ -11,6 +13,7 @@ export default function Home() {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -25,28 +28,38 @@ export default function Home() {
     el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }, [input]);
 
-  function handleSend() {
-    const trimmed = input.trim();
-    if (!trimmed || isSending) return;
-    const userMessage = {
-      id: `u-${Date.now()}`,
-      role: "user",
-      content: trimmed,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsSending(true);
+  async function handleSend() {
+    try {
+      const trimmed = input.trim();
+      if (!trimmed || isSending) return;
+      const userMessage = {
+        id: `u-${Date.now()}`,
+        role: "user",
+        content: trimmed,
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setInput("");
+      setIsSending(true);
+      setIsTyping(true);
 
-    setTimeout(() => {
+      const response = await axios.post("/api/prompts", {
+        prompt: trimmed,
+      });
+      const data = await response.data;
+      console.log("data", data);
+
       const reply = {
         id: `a-${Date.now()}`,
         role: "assistant",
-        content:
-          "This is a placeholder response. Connect an API to get real answers.",
+        content: data.message,
       };
       setMessages((prev) => [...prev, reply]);
+    } catch (error) {
+      console.log("error", error);
+    } finally {
       setIsSending(false);
-    }, 500);
+      setIsTyping(false);
+    }
   }
 
   function handleKeyDown(e) {
@@ -60,6 +73,37 @@ export default function Home() {
     setMessages(initialMessages);
     setInput("");
   }
+
+  async function handleRegenerate(messageId) {
+    // Find the user message that prompted this response
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+    
+    // Find the previous user message
+    const userMessage = messages[messageIndex - 1];
+    if (!userMessage || userMessage.role !== 'user') return;
+
+    setIsTyping(true);
+    
+    try {
+      const response = await axios.post("/api/prompts", {
+        prompt: userMessage.content,
+      });
+      
+      // Update the assistant message with new response
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, content: response.data.message }
+          : msg
+      ));
+    } catch (error) {
+      console.error('Error regenerating:', error);
+    } finally {
+      setIsTyping(false);
+    }
+  }
+
+  console.log("messages", messages);
 
   return (
     <div className="font-sans flex h-screen bg-white dark:bg-[#121212] text-[#111] dark:text-[#e5e5e5]">
@@ -85,16 +129,22 @@ export default function Home() {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col">
-        <header className="h-12 border-b border-black/[.08] dark:border-white/[.06] flex items-center px-4 text-sm">
+      <div className="flex-1 flex flex-col dark:bg-[#212121]">
+        <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center px-4 text-sm">
           ChatGPT
         </header>
 
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
             {messages.map((m) => (
-              <MessageBubble key={m.id} role={m.role} content={m.content} />
+              <MessageBubble 
+                key={m.id} 
+                role={m.role} 
+                content={m.content} 
+                onRegenerate={() => handleRegenerate(m.id)}
+              />
             ))}
+            {isTyping && <TypingBubble />}
             <div ref={scrollAnchorRef} />
           </div>
         </div>
