@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import MessageBubble from "../components/MessageBubble";
 import TypingBubble from "../components/TypingBubble";
+import Sidebar from "../components/Sidebar";
 import axios from "axios";
 
 const initialMessages = [
@@ -107,27 +108,7 @@ export default function Home() {
 
   return (
     <div className="font-sans flex h-screen bg-white dark:bg-[#121212] text-[#111] dark:text-[#e5e5e5]">
-      <aside className="hidden md:flex w-[260px] shrink-0 flex-col border-r border-black/[.08] dark:border-white/[.06] bg-[#f7f7f7] dark:bg-[#0f0f0f]">
-        <div className="p-3">
-          <button
-            onClick={newChat}
-            className="w-full rounded-md border border-black/[.08] dark:border-white/[.12] bg-white dark:bg-[#1a1a1a] hover:bg-[#f2f2f2] dark:hover:bg-[#2a2a2a] px-3 py-2 text-sm"
-          >
-            + New chat
-          </button>
-        </div>
-        <div className="px-3 pb-3 text-xs text-black/60 dark:text-white/50">
-          Recent
-        </div>
-        <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
-          <div className="text-sm px-3 py-2 rounded-md hover:bg-black/[.05] dark:hover:bg-white/[.05] cursor-default">
-            Welcome
-          </div>
-        </div>
-        <div className="p-3 border-t border-black/[.08] dark:border-white/[.06] text-xs text-black/60 dark:text-white/50">
-          ChatGPT Clone
-        </div>
-      </aside>
+      <Sidebar newChat={newChat} />
 
       <div className="flex-1 flex flex-col dark:bg-[#212121]">
         <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center px-4 text-sm">

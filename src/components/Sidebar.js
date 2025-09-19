@@ -1,0 +1,50 @@
+"use client";
+
+import { SignedIn, UserButton } from "@clerk/nextjs";
+
+export default function Sidebar({ newChat }) {
+  return (
+    <SignedIn>
+      <aside className="hidden md:flex w-[260px] shrink-0 flex-col border-r border-black/[.08] dark:border-white/[.06] bg-[#f7f7f7] dark:bg-[#0f0f0f]">
+        <div className="p-3">
+          <button
+            onClick={newChat}
+            className="w-full rounded-md border border-black/[.08] dark:border-white/[.12] bg-white dark:bg-[#1a1a1a] hover:bg-[#f2f2f2] dark:hover:bg-[#2a2a2a] px-3 py-2 text-sm"
+          >
+            + New chat
+          </button>
+        </div>
+        <div className="px-3 pb-3 text-xs text-black/60 dark:text-white/50">
+          Recent
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
+          <div className="text-sm px-3 py-2 rounded-md hover:bg-black/[.05] dark:hover:bg-white/[.05] cursor-default">
+            Welcome
+          </div>
+        </div>
+        
+        {/* User Profile Section at Bottom */}
+        <div className="p-3 border-t border-black/[.08] dark:border-white/[.06] flex items-center gap-3">
+          <UserButton 
+            appearance={{
+              elements: {
+                avatarBox: "w-8 h-8"
+              }
+            }}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-black dark:text-white truncate">
+              Sharabh Mishra
+            </div>
+            <div className="text-xs text-black/60 dark:text-white/50">
+              Free
+            </div>
+          </div>
+          <button className="px-3 py-1 text-xs bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
+            Upgrade
+          </button>
+        </div>
+      </aside>
+    </SignedIn>
+  );
+}
