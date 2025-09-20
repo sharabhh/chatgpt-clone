@@ -1,8 +1,9 @@
 "use client";
 
-import { SignedIn, UserButton } from "@clerk/nextjs";
+import { SignedIn, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Sidebar({ newChat }) {
+  const { user } = useUser();
   return (
     <SignedIn>
       <aside className="hidden md:flex w-[260px] shrink-0 flex-col border-r border-black/[.08] dark:border-white/[.06] bg-[#f7f7f7] dark:bg-[#0f0f0f]">
@@ -34,7 +35,7 @@ export default function Sidebar({ newChat }) {
           />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium text-black dark:text-white truncate">
-              Sharabh Mishra
+              {user?.fullName}
             </div>
             <div className="text-xs text-black/60 dark:text-white/50">
               Free
