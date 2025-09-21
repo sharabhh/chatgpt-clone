@@ -75,67 +75,90 @@ useEffect(() => {
       const trimmed = input.trim();
       if (!trimmed || isSending) return;
       
-      // If no current conversation, create a new one with the prompt as title
-      let conversationId = currentConversationId;
-      if (!conversationId) {
-        conversationId = await createNewConversation(trimmed);
-        setCurrentConversationId(conversationId);
-      }
-
       const userMessage = {
         id: `u-${Date.now()}`,
         role: "user",
         content: trimmed,
-        messageIndex: messages.length, // Track the index for new messages
+        messageIndex: messages.length,
       };
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
       setIsSending(true);
       setIsTyping(true);
 
-      // Save user message to conversation
-      await axios.post(`/api/conversations/${conversationId}`, {
-        role: "user",
-        content: trimmed,
-      });
+      // Check if user is logged in
+      if (isLoaded && user && userDetails) {
+        // LOGGED IN USER FLOW
+        // If no current conversation, create a new one with the prompt as title
+        let conversationId = currentConversationId;
+        if (!conversationId) {
+          conversationId = await createNewConversation(trimmed);
+          setCurrentConversationId(conversationId);
+        }
 
-      // Update conversation title if it's still the default and this is likely the first message
-      const currentConversation = conversations.find(conv => conv._id === conversationId);
-      if (currentConversation && currentConversation.title === "New Conversation") {
-        await axios.put("/api/conversations", {
-          conversationId: conversationId,
-          title: trimmed.slice(0, 15),
+        // Save user message to conversation
+        await axios.post(`/api/conversations/${conversationId}`, {
+          role: "user",
+          content: trimmed,
         });
+
+        // Update conversation title if it's still the default and this is likely the first message
+        const currentConversation = conversations.find(conv => conv._id === conversationId);
+        if (currentConversation && currentConversation.title === "New Conversation") {
+          await axios.put("/api/conversations", {
+            conversationId: conversationId,
+            title: trimmed.slice(0, 15),
+          });
+        }
+
+        const response = await axios.post("/api/prompts", {
+          prompt: trimmed,
+          userId: userDetails._id,
+          conversationId: conversationId,
+        });
+        const data = await response.data;
+
+        const replyId = `a-${Date.now()}`;
+        const reply = {
+          id: replyId,
+          role: "assistant",
+          content: data.message,
+          messageIndex: messages.length + 1,
+        };
+        
+        setTypingMessageId(replyId);
+        setMessages((prev) => [...prev, reply]);
+
+        // Save assistant message to conversation
+        await axios.post(`/api/conversations/${conversationId}`, {
+          role: "assistant",
+          content: data.message,
+        });
+
+        // Reload conversations to update sidebar
+        await loadConversations();
+      } else {
+        // ANONYMOUS USER FLOW - no database operations
+        console.log("Anonymous user - conversation will not be saved");
+        
+        const response = await axios.post("/api/prompts", {
+          prompt: trimmed,
+          // No userId or conversationId for anonymous users
+        });
+        const data = await response.data;
+
+        const replyId = `a-${Date.now()}`;
+        const reply = {
+          id: replyId,
+          role: "assistant",
+          content: data.message,
+          messageIndex: messages.length + 1,
+        };
+        
+        setTypingMessageId(replyId);
+        setMessages((prev) => [...prev, reply]);
+        // No database saving for anonymous users
       }
-
-      const response = await axios.post("/api/prompts", {
-        prompt: trimmed,
-        userId: userDetails._id,
-        conversationId: conversationId,
-      });
-      const data = await response.data;
-      console.log("data", data);
-
-      const replyId = `a-${Date.now()}`;
-      const reply = {
-        id: replyId,
-        role: "assistant",
-        content: data.message,
-        messageIndex: messages.length + 1, // Track the index for new messages
-      };
-      
-      // Set the typing message ID to trigger typewriter effect
-      setTypingMessageId(replyId);
-      setMessages((prev) => [...prev, reply]);
-
-      // Save assistant message to conversation
-      await axios.post(`/api/conversations/${conversationId}`, {
-        role: "assistant",
-        content: data.message,
-      });
-
-      // Reload conversations to update sidebar
-      await loadConversations();
     } catch (error) {
       console.log("error", error);
     } finally {
@@ -224,7 +247,8 @@ function createMessage(role, content) {
     try {
       const response = await axios.post("/api/prompts", {
         prompt: userMessage.content,
-        userId: userDetails._id,
+        userId: userDetails?._id,
+        conversationId: currentConversationId,
       });
       
       // Update the assistant message with new response and trigger typewriter
@@ -235,8 +259,8 @@ function createMessage(role, content) {
           : msg
       ));
 
-      // Update in database if we have a conversation
-      if (currentConversationId && userMessage.messageIndex !== undefined) {
+      // Update in database if we have a conversation (only for logged-in users)
+      if (isLoaded && user && currentConversationId && userMessage.messageIndex !== undefined) {
         await axios.put(`/api/conversations/${currentConversationId}`, {
           messageIndex: userMessage.messageIndex,
           newContent: userMessage.content,
@@ -266,8 +290,8 @@ function createMessage(role, content) {
       setIsSending(true);
       setIsTyping(true);
 
-      // Update the database first - this will also remove all subsequent messages
-      if (currentConversationId && message.messageIndex !== undefined) {
+      // Update the database first - this will also remove all subsequent messages (only for logged-in users)
+      if (isLoaded && user && currentConversationId && message.messageIndex !== undefined) {
         await axios.put(`/api/conversations/${currentConversationId}`, {
           messageIndex: message.messageIndex,
           newContent: newContent,
@@ -282,7 +306,8 @@ function createMessage(role, content) {
       // Generate new response for the edited prompt
       const response = await axios.post("/api/prompts", {
         prompt: newContent,
-        userId: userDetails._id,
+        userId: userDetails?._id,
+        conversationId: currentConversationId,
       });
 
       const replyId = `a-${Date.now()}`;
@@ -297,16 +322,18 @@ function createMessage(role, content) {
       setTypingMessageId(replyId);
       setMessages(prev => [...prev, reply]);
 
-      // Save the new assistant message to conversation
-      if (currentConversationId) {
+      // Save the new assistant message to conversation (only for logged-in users)
+      if (isLoaded && user && currentConversationId) {
         await axios.post(`/api/conversations/${currentConversationId}`, {
           role: "assistant",
           content: response.data.message,
         });
       }
 
-      // Reload conversations to update sidebar
-      await loadConversations();
+      // Reload conversations to update sidebar (only for logged-in users)
+      if (isLoaded && user) {
+        await loadConversations();
+      }
     } catch (error) {
       console.error('Error editing message:', error);
     } finally {
@@ -319,26 +346,31 @@ function createMessage(role, content) {
 
   return (
     <div className="font-sans flex h-screen bg-white dark:bg-[#121212] text-[#111] dark:text-[#e5e5e5]">
-      <Sidebar 
-        newChat={newChat} 
-        conversations={conversations}
-        loadConversation={loadConversation}
-        currentConversationId={currentConversationId}
-        isMobileSidebarOpen={isMobileSidebarOpen}
-        setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-      />
+      {/* Only show sidebar for logged-in users */}
+      {isLoaded && user && (
+        <Sidebar 
+          newChat={newChat} 
+          conversations={conversations}
+          loadConversation={loadConversation}
+          currentConversationId={currentConversationId}
+          isMobileSidebarOpen={isMobileSidebarOpen}
+          setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+        />
+      )}
 
       <div className="flex-1 flex flex-col dark:bg-[#212121]">
         <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center justify-between px-4 text-xl">
-          {/* Mobile hamburger menu */}
-          <button
-            onClick={() => setIsMobileSidebarOpen(true)}
-            className="md:hidden p-2 -ml-2 hover:bg-black/[.05] dark:hover:bg-white/[.1] rounded-lg transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black dark:text-white">
-              <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+          {/* Mobile hamburger menu - only for logged-in users */}
+          {isLoaded && user && (
+            <button
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden p-2 -ml-2 hover:bg-black/[.05] dark:hover:bg-white/[.1] rounded-lg transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black dark:text-white">
+                <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
           
           <div className="flex-1 md:flex-none text-center md:text-left">
             ChatGPT

@@ -37,9 +37,9 @@ export async function POST(request) {
     const { userId, prompt, conversationId } = body;
     console.log(body);
 
-    // Check if we need to summarize conversation history
+    // Check if we need to summarize conversation history (only for logged-in users)
     let conversationContext = "";
-    if (conversationId) {
+    if (conversationId && userId) {
       try {
         const conversation = await Conversation.findById(conversationId);
         if (conversation && conversation.messages.length >= 20) {
@@ -104,7 +104,7 @@ ${recentContext}
       prompt: personalizedPrompt,
     });
 
-    // Save conversation to mem0 using proper message format
+    // Save conversation to mem0 using proper message format (only for logged-in users)
     if (userId) {
       try {
         console.log("Saving conversation to mem0");
@@ -119,6 +119,8 @@ ${recentContext}
         console.log("Memory saving failed:", memoryError);
         // Don't fail the entire request if memory saving fails
       }
+    } else {
+      console.log("Anonymous user - skipping mem0 storage");
     }
 
     return NextResponse.json({ message: response.text }, { status: 200 });
