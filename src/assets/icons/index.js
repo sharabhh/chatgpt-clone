@@ -15,3 +15,6 @@ export { default as ImageIcon } from './ImageIcon';
 export { default as SearchIcon } from './SearchIcon';
 export { default as ThumbsUpLined } from './ThumbsUpLined';
 export { default as ThumbsDownLined } from './ThumbsDownLined';
+export { default as EditIcon } from './EditIcon';
+export { default as NewChatIcon } from './NewChatIcon';
+export { default as LibraryIcon } from './LibraryIcon';
