@@ -18,6 +18,7 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [typingMessageId, setTypingMessageId] = useState(null);
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
   const { user, isLoaded } = useUser();
@@ -112,11 +113,15 @@ useEffect(() => {
       const data = await response.data;
       console.log("data", data);
 
+      const replyId = `a-${Date.now()}`;
       const reply = {
-        id: `a-${Date.now()}`,
+        id: replyId,
         role: "assistant",
         content: data.message,
       };
+      
+      // Set the typing message ID to trigger typewriter effect
+      setTypingMessageId(replyId);
       setMessages((prev) => [...prev, reply]);
 
       // Save assistant message to conversation
@@ -217,7 +222,8 @@ function createMessage(role, content) {
         userId: user.id,
       });
       
-      // Update the assistant message with new response
+      // Update the assistant message with new response and trigger typewriter
+      setTypingMessageId(messageId);
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
           ? { ...msg, content: response.data.message }
@@ -308,14 +314,20 @@ function createMessage(role, content) {
           <>
             <div className="flex-1 overflow-y-auto">
               <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-                {messages.map((m) => (
-                  <MessageBubble 
-                    key={m.id} 
-                    role={m.role} 
-                    content={m.content} 
-                    onRegenerate={() => handleRegenerate(m.id)}
-                  />
-                ))}
+            {messages.map((m) => (
+              <MessageBubble 
+                key={m.id} 
+                role={m.role} 
+                content={m.content} 
+                onRegenerate={() => handleRegenerate(m.id)}
+                isTyping={m.role === "assistant" && m.id === typingMessageId}
+                onTypingComplete={() => {
+                  if (m.id === typingMessageId) {
+                    setTypingMessageId(null);
+                  }
+                }}
+              />
+            ))}
                 {isTyping && <TypingBubble />}
                 <div ref={scrollAnchorRef} />
               </div>
