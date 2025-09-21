@@ -1,11 +1,27 @@
 "use client";
 
 import { SignedIn, useUser } from "@clerk/nextjs";
+import { useEffect } from "react";
 import UserProfileButton from "./UserProfileButton";
 import { ChatGPTIcon, NewChatIcon, SearchIcon, LibraryIcon } from "@/assets/icons";
 
 export default function Sidebar({ newChat, conversations, loadConversation, currentConversationId }) {
   const { user } = useUser();
+
+  // Add keyboard shortcut listener for Ctrl+Shift+O
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'O') {
+        event.preventDefault();
+        newChat();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [newChat]);
 
   // Function to get conversation title for display (first 30 chars of first message or DB title)
   const getConversationTitle = (conversation) => {
@@ -40,10 +56,15 @@ export default function Sidebar({ newChat, conversations, loadConversation, curr
         <div className="p-3 space-y-1">
           <button
             onClick={newChat}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-white hover:bg-black/[.05] dark:hover:bg-white/[.18] rounded-md transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 text-sm text-black dark:text-white hover:bg-black/[.05] dark:hover:bg-white/[.18] rounded-md transition-colors group"
           >
-            <NewChatIcon className="w-8 h-8" />
-            New chat
+            <div className="flex items-center gap-3">
+              <NewChatIcon className="w-8 h-8" />
+              New chat
+            </div>
+            <span className="text-xs text-black/40 dark:text-white/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              Ctrl+Shift+O
+            </span>
           </button>
           
           <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-black dark:text-white hover:bg-black/[.05] dark:hover:bg-white/[.18] rounded-md transition-colors">

@@ -248,7 +248,7 @@ function createMessage(role, content) {
       />
 
       <div className="flex-1 flex flex-col dark:bg-[#212121]">
-        <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center px-4 text-sm">
+        <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center px-4 text-xl">
           ChatGPT
         </header>
 
