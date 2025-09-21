@@ -111,6 +111,7 @@ useEffect(() => {
       const response = await axios.post("/api/prompts", {
         prompt: trimmed,
         userId: userDetails._id,
+        conversationId: conversationId,
       });
       const data = await response.data;
       console.log("data", data);
