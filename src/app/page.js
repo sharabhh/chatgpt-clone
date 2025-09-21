@@ -5,6 +5,7 @@ import MessageBubble from "../components/MessageBubble";
 import TypingBubble from "../components/TypingBubble";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+import { SignedIn, useUser } from "@clerk/nextjs";
 
 const initialMessages = [
   { id: "m1", role: "assistant", content: "How can I help you today?" },
@@ -17,10 +18,30 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false);
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+// Create user in database when they sign up/sign in
+useEffect(() => {
+  async function createUser() {
+    if (isLoaded && user) {
+      try {
+        const response = await axios.post("/api/users", {
+          clerkId: user.id,
+          name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          email: user.primaryEmailAddress?.emailAddress,
+        });
+        console.log("User creation response:", response.data);
+      } catch (error) {
+        console.error("Error creating user:", error);
+      }
+    }
+  }
+  createUser();
+}, [isLoaded, user])
 
   useEffect(() => {
     const el = textareaRef.current;
