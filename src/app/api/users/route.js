@@ -5,11 +5,38 @@ import User from "@/app/models/User";
 export async function GET(request) {
   try {
     await connectDB();
-    const users = await User.find();
-    return NextResponse.json({ users }, { status: 200 });
+    
+    // Get clerkId from query parameters
+    const { searchParams } = new URL(request.url);
+    const clerkId = searchParams.get('clerkId');
+    
+    console.log("Getting user with clerkId:", clerkId);
+    
+    if (!clerkId) {
+      return NextResponse.json(
+        { message: "clerkId query parameter is required" }, 
+        { status: 400 }
+      );
+    }
+
+    const user = await User.findOne({ clerkId: clerkId });
+    
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found with the provided clerkId" }, 
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ 
+      message: "User retrieved successfully",
+      user 
+    }, { status: 200 });
+    
   } catch (error) {
+    console.error("User retrieval error:", error);
     return NextResponse.json(
-      { message: "Users retrieval failed", error },
+      { message: "User retrieval failed", error: error.message },
       { status: 500 }
     );
   }

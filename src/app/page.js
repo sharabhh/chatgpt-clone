@@ -21,7 +21,7 @@ export default function Home() {
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
   const { user, isLoaded } = useUser();
-
+const [userDetails, setUserDetails] = useState(null);
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -37,6 +37,7 @@ useEffect(() => {
           email: user.primaryEmailAddress?.emailAddress,
         });
         console.log("User creation response:", response.data);
+        setUserDetails(response.data.user);
       } catch (error) {
         console.error("Error creating user:", error);
       }
@@ -106,6 +107,7 @@ useEffect(() => {
 
       const response = await axios.post("/api/prompts", {
         prompt: trimmed,
+        userId: userDetails._id,
       });
       const data = await response.data;
       console.log("data", data);
@@ -212,6 +214,7 @@ function createMessage(role, content) {
     try {
       const response = await axios.post("/api/prompts", {
         prompt: userMessage.content,
+        userId: user.id,
       });
       
       // Update the assistant message with new response

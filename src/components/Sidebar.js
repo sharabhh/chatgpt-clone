@@ -27,7 +27,7 @@ export default function Sidebar({ newChat, conversations, loadConversation, curr
           </button>
         </div>
         <div className="px-3 pb-3 text-xs text-black/60 dark:text-white/50">
-          Recent
+          Chats
         </div>
         <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1">
           {conversations && conversations.length > 0 ? (
