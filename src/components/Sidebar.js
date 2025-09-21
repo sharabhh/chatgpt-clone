@@ -1,9 +1,10 @@
 "use client";
 
-import { SignedIn, UserButton, useUser } from "@clerk/nextjs";
+import { SignedIn, useUser } from "@clerk/nextjs";
+import UserProfileButton from "./UserProfileButton";
 
 export default function Sidebar({ newChat, conversations, loadConversation, currentConversationId }) {
-  const { user } = useUser();
+  
 
   // Function to get conversation title for display (first 30 chars of first message or DB title)
   const getConversationTitle = (conversation) => {
@@ -52,26 +53,7 @@ export default function Sidebar({ newChat, conversations, loadConversation, curr
         </div>
         
         {/* User Profile Section at Bottom */}
-        <div className="p-3 border-t border-black/[.08] dark:border-white/[.06] flex items-center gap-3">
-          <UserButton 
-            appearance={{
-              elements: {
-                avatarBox: "w-8 h-8"
-              }
-            }}
-          />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-black dark:text-white truncate">
-              {user?.fullName}
-            </div>
-            <div className="text-xs text-black/60 dark:text-white/50">
-              Free
-            </div>
-          </div>
-          <button className="px-3 py-1 text-xs bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors">
-            Upgrade
-          </button>
-        </div>
+       <UserProfileButton />
       </aside>
     </SignedIn>
   );
