@@ -86,6 +86,7 @@ useEffect(() => {
         id: `u-${Date.now()}`,
         role: "user",
         content: trimmed,
+        messageIndex: messages.length, // Track the index for new messages
       };
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
@@ -119,6 +120,7 @@ useEffect(() => {
         id: replyId,
         role: "assistant",
         content: data.message,
+        messageIndex: messages.length + 1, // Track the index for new messages
       };
       
       // Set the typing message ID to trigger typewriter effect
@@ -198,6 +200,7 @@ function createMessage(role, content) {
         id: `${msg.role}-${index}`,
         role: msg.role,
         content: msg.content,
+        messageIndex: index, // Store the index for editing
       }));
       setMessages(conversationMessages);
       setCurrentConversationId(conversationId);
@@ -220,7 +223,7 @@ function createMessage(role, content) {
     try {
       const response = await axios.post("/api/prompts", {
         prompt: userMessage.content,
-        userId: user.id,
+        userId: userDetails._id,
       });
       
       // Update the assistant message with new response and trigger typewriter
@@ -230,9 +233,83 @@ function createMessage(role, content) {
           ? { ...msg, content: response.data.message }
           : msg
       ));
+
+      // Update in database if we have a conversation
+      if (currentConversationId && userMessage.messageIndex !== undefined) {
+        await axios.put(`/api/conversations/${currentConversationId}`, {
+          messageIndex: userMessage.messageIndex,
+          newContent: userMessage.content,
+        });
+        
+        // Add the new assistant response to the database
+        await axios.post(`/api/conversations/${currentConversationId}`, {
+          role: "assistant",
+          content: response.data.message,
+        });
+      }
     } catch (error) {
       console.error('Error regenerating:', error);
     } finally {
+      setIsTyping(false);
+    }
+  }
+
+  async function handleEdit(messageId, newContent) {
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+    
+    const message = messages[messageIndex];
+    if (message.role !== 'user') return;
+
+    try {
+      setIsSending(true);
+      setIsTyping(true);
+
+      // Update the database first - this will also remove all subsequent messages
+      if (currentConversationId && message.messageIndex !== undefined) {
+        await axios.put(`/api/conversations/${currentConversationId}`, {
+          messageIndex: message.messageIndex,
+          newContent: newContent,
+        });
+      }
+
+      // Update the message content in the local state and remove all subsequent messages
+      const updatedMessages = messages.slice(0, messageIndex + 1);
+      updatedMessages[messageIndex] = { ...message, content: newContent };
+      setMessages(updatedMessages);
+
+      // Generate new response for the edited prompt
+      const response = await axios.post("/api/prompts", {
+        prompt: newContent,
+        userId: userDetails._id,
+      });
+
+      const replyId = `a-${Date.now()}`;
+      const reply = {
+        id: replyId,
+        role: "assistant",
+        content: response.data.message,
+        messageIndex: messageIndex + 1,
+      };
+      
+      // Set the typing message ID to trigger typewriter effect
+      setTypingMessageId(replyId);
+      setMessages(prev => [...prev, reply]);
+
+      // Save the new assistant message to conversation
+      if (currentConversationId) {
+        await axios.post(`/api/conversations/${currentConversationId}`, {
+          role: "assistant",
+          content: response.data.message,
+        });
+      }
+
+      // Reload conversations to update sidebar
+      await loadConversations();
+    } catch (error) {
+      console.error('Error editing message:', error);
+    } finally {
+      setIsSending(false);
       setIsTyping(false);
     }
   }
@@ -335,6 +412,7 @@ function createMessage(role, content) {
                 role={m.role} 
                 content={m.content} 
                 onRegenerate={() => handleRegenerate(m.id)}
+                onEdit={(newContent) => handleEdit(m.id, newContent)}
                 isTyping={m.role === "assistant" && m.id === typingMessageId}
                 onTypingComplete={() => {
                   if (m.id === typingMessageId) {

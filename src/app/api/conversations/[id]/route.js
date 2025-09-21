@@ -39,3 +39,34 @@ export async function GET(req, { params }) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+// Update a specific message and remove all subsequent messages
+export async function PUT(req, { params }) {
+  try {
+    await connectDB();
+    const { id } = await params; // conversationId
+    const { messageIndex, newContent } = await req.json();
+
+    const conversation = await Conversation.findById(id);
+    if (!conversation) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    }
+
+    // Validate message index
+    if (messageIndex < 0 || messageIndex >= conversation.messages.length) {
+      return NextResponse.json({ error: "Invalid message index" }, { status: 400 });
+    }
+
+    // Update the message content
+    conversation.messages[messageIndex].content = newContent;
+    
+    // Remove all messages after this index
+    conversation.messages = conversation.messages.slice(0, messageIndex + 1);
+    
+    await conversation.save();
+
+    return NextResponse.json(conversation.messages);
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
