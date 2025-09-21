@@ -13,3 +13,5 @@ export { default as ChevronDownIcon } from './ChevronDownIcon';
 export { default as FileIcon } from './FileIcon';
 export { default as ImageIcon } from './ImageIcon';
 export { default as SearchIcon } from './SearchIcon';
+export { default as ThumbsUpLined } from './ThumbsUpLined';
+export { default as ThumbsDownLined } from './ThumbsDownLined';
