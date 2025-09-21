@@ -19,6 +19,7 @@ export default function Home() {
   const [currentConversationId, setCurrentConversationId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [typingMessageId, setTypingMessageId] = useState(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
   const { user, isLoaded } = useUser();
@@ -245,11 +246,25 @@ function createMessage(role, content) {
         conversations={conversations}
         loadConversation={loadConversation}
         currentConversationId={currentConversationId}
+        isMobileSidebarOpen={isMobileSidebarOpen}
+        setIsMobileSidebarOpen={setIsMobileSidebarOpen}
       />
 
       <div className="flex-1 flex flex-col dark:bg-[#212121]">
-        <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center px-4 text-xl">
-          ChatGPT
+        <header className="h-12 border-b border-black/[.08] dark:border-white/[.01] flex items-center justify-between px-4 text-xl">
+          {/* Mobile hamburger menu */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="md:hidden p-2 -ml-2 hover:bg-black/[.05] dark:hover:bg-white/[.1] rounded-lg transition-colors"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black dark:text-white">
+              <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          
+          <div className="flex-1 md:flex-none text-center md:text-left">
+            ChatGPT
+          </div>
         </header>
 
 {messages.length === 0 ? (
