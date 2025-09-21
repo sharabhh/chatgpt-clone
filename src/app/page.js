@@ -251,7 +251,7 @@ function createMessage(role, content) {
           <div className="flex-1 flex flex-col items-center justify-center px-4 md:pb-60">
             <div className="text-center mb-4">
               <h1 className="text-2xl md:text-3xl font-normal text-black/90 dark:text-white/90 mb-8">
-                What's on your mind today?
+                What&apos;s on your mind today?
               </h1>
             </div>
             
