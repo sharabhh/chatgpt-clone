@@ -108,11 +108,22 @@ useEffect(() => {
       // Check if user is logged in
       if (isLoaded && user && userDetails) {
         // LOGGED IN USER FLOW
-        // If no current conversation, something went wrong - shouldn't happen now
         let conversationId = currentConversationId;
+        
+        // If no current conversation, create one seamlessly
         if (!conversationId) {
-          console.error("No current conversation ID - this shouldn't happen");
-          return;
+          try {
+            const newConversationResponse = await axios.post("/api/conversations", {
+              clerkId: user.id,
+              title: "New Conversation",
+            });
+            conversationId = newConversationResponse.data._id;
+            setCurrentConversationId(conversationId);
+            console.log("Created new conversation seamlessly:", conversationId);
+          } catch (error) {
+            console.error("Error creating conversation:", error);
+            return;
+          }
         }
 
         // Save user message to conversation
@@ -156,6 +167,11 @@ useEffect(() => {
           role: "assistant",
           content: data.message,
         });
+
+        // Update URL in background for sharing (only if on home page)
+        if (window.location.pathname === '/') {
+          window.history.pushState({}, '', `/chat/${conversationId}`);
+        }
 
         // Reload conversations to update sidebar
         await loadConversations();
