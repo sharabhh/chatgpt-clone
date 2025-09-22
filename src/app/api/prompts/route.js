@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/app/lib/dbconnect";
 import { generateText } from "ai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+// import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import mem0 from "@/app/lib/mem0";
 import Conversation from "@/app/models/Conversation";
 
-const googleAI = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_API_KEY,
+const anthropic = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+
 
 // Helper function to summarize old messages
 async function summarizeOldMessages(messages) {
@@ -17,7 +20,7 @@ async function summarizeOldMessages(messages) {
       .join("\n");
 
     const summaryResponse = await generateText({
-      model: googleAI("gemini-2.0-flash-001"),
+      model: anthropic("claude-3-5-sonnet-20240620"),
       prompt: `Please provide a concise summary of this conversation history. Focus on key topics, decisions, and important context that would be relevant for continuing the conversation. Keep it under 500 words:
 
 ${messageText}`,
@@ -100,7 +103,7 @@ ${recentContext}
     }
 
     const response = await generateText({
-      model: googleAI("gemini-2.0-flash-001"),
+      model: anthropic("claude-3-5-sonnet-20240620"),
       prompt: personalizedPrompt,
     });
 
