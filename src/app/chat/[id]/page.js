@@ -591,9 +591,9 @@ export default function ChatPage() {
                 </div>
                 
                 <div className="absolute right-16 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                  <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
+                  {/* <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
                     <MicrophoneIcon className="text-black/60 dark:text-white/60" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
               
