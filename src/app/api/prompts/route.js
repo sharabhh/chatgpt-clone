@@ -20,7 +20,7 @@ async function summarizeOldMessages(messages) {
       .join("\n");
 
     const summaryResponse = await generateText({
-      model: anthropic("claude-3-5-sonnet-20240620"),
+      model: anthropic("claude-3-5-sonnet-latest"),
       prompt: `Please provide a concise summary of this conversation history. Focus on key topics, decisions, and important context that would be relevant for continuing the conversation. Keep it under 500 words:
 
 ${messageText}`,
@@ -103,7 +103,7 @@ ${recentContext}
     }
 
     const response = await generateText({
-      model: anthropic("claude-3-5-sonnet-20240620"),
+      model: anthropic("claude-3-5-sonnet-latest"),
       prompt: personalizedPrompt,
     });
 
