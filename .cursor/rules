@@ -1,0 +1,132 @@
+# Next.js Project Cursor Rules
+
+## Project Overview
+This is a Next.js application following modern React patterns, TypeScript best practices, and Next.js 13+ App Router conventions.
+
+## Core Principles
+- Follow Next.js 13+ App Router patterns
+- Maintain clean, readable, and performant code
+- Follow React best practices and hooks patterns
+- Ensure accessibility (a11y) compliance
+- Optimize for SEO and performance
+
+### Component Organization
+- Group components by feature or domain
+- Use index files for clean imports
+- Keep components small and focused (single responsibility)
+- Co-locate related files (component, styles, tests)
+- all svgs  should be inside their only .js files which will be imported into the icons/index.js and then we'll import those icons everywhere else from a single file. 
+
+## Code Quality Standards
+
+### TypeScript Rules
+- Always use TypeScript strict mode
+- Define proper interfaces and types
+- Avoid `any` type - use `unknown` or specific types
+- Use const assertions where appropriate
+- Implement proper error boundaries with typed errors
+
+### React/Next.js Best Practices
+- Use React Server Components by default
+- Mark client components with 'use client' directive only when necessary
+- Prefer server-side data fetching with async components
+- Use Next.js built-in optimizations (Image, Link, Font)
+- Implement proper error boundaries and loading states
+- Follow hooks rules and use custom hooks for complex logic
+
+### Performance Guidelines
+- Implement code splitting and lazy loading
+- Use Next.js Image component for all images
+- Implement proper caching strategies
+- Use React.memo() for expensive components
+- Optimize bundle size with proper imports
+- Use Next.js built-in performance monitoring
+
+### SEO and Accessibility
+- Include proper meta tags and structured data
+- Use semantic HTML elements
+- Implement proper heading hierarchy (h1-h6)
+- Add alt text for images
+- Ensure keyboard navigation support
+- Maintain proper color contrast ratios
+- Use ARIA attributes when necessary
+
+## Naming Conventions
+
+### Files and Folders
+- Use PascalCase for folder names
+- Use PascalCase for component files
+- Use camelCase for utility files
+- Use descriptive names that indicate purpose
+
+### Variables and Functions
+- Use camelCase for variables and functions
+- Use PascalCase for components and classes
+- Use SCREAMING_SNAKE_CASE for constants
+- Use descriptive names that explain purpose
+
+### Components
+- Use PascalCase for component names
+- Use descriptive names (e.g., `UserProfileCard` not `Card`)
+- Include prop type definitions
+- Use forwardRef when exposing DOM elements
+
+## Import/Export Standards
+- Use named exports for utilities and hooks
+- Use default exports for pages and main components
+- Group imports: React, third-party, local
+- Use absolute imports with path mapping
+- Avoid deep relative imports (../../..)
+
+## State Management
+- Use React state for local component state
+- Use Zustand for complex global state
+- Implement proper error handling in state updates
+
+## Error Handling
+- Implement error boundaries at appropriate levels
+- Use try-catch for async operations
+- Provide meaningful error messages
+- Log errors appropriately for debugging
+- Implement fallback UI for error states
+
+## Code Formatting
+- Use Prettier for consistent formatting
+- Use ESLint with Next.js configuration
+- Sort imports automatically
+- Use consistent spacing and indentation
+- Remove unused imports and variables
+
+## Security Guidelines
+- Validate all user inputs
+- Implement proper authentication and authorization
+- Implement proper CORS policies
+- Use environment variables for sensitive data
+
+## Performance Monitoring
+- Use Next.js analytics and monitoring
+- Implement Core Web Vitals tracking
+- Monitor bundle size and loading performance
+- Use React DevTools for performance profiling
+- Implement proper error tracking
+
+## Review Checklist
+Before approving any code, ensure:
+- [ ] ESLint and Prettier checks pass
+- [ ] Performance impact is acceptable
+- [ ] Accessibility requirements are met
+- [ ] Security best practices are followed
+- [ ] Code follows established patterns and conventions
+
+## Common Anti-patterns to Avoid
+- Don't mutate props directly
+- Don't forget dependency arrays in useEffect
+- Don't use index as key in React lists
+- Don't put business logic in components
+- Don't ignore error handling
+- Don't skip loading states
+- Don't use inline styles for complex styling
+- Don't fetch data in useEffect when you can use RSC
+- Don't over-engineer simple solutions
+
+Remember: Code should be readable, maintainable, and performant. When in doubt, favor explicit over clever, and simple over complex.

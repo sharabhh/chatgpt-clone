@@ -1,6 +1,8 @@
 "use client";
 
-export default function TypingBubble() {
+import { memo } from "react";
+
+function TypingBubble() {
   return (
     <div className="flex gap-3 py-4">
         <div className="flex items-center">
@@ -9,3 +11,6 @@ export default function TypingBubble() {
     </div>
   );
 }
+
+// Memoize component for performance  
+export default memo(TypingBubble);

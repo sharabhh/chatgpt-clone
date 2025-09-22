@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import MessageBubble from "../../../components/MessageBubble";
 import TypingBubble from "../../../components/TypingBubble";
 import Sidebar from "../../../components/Sidebar";
+import { MenuIcon, ShareIcon, AttachmentIcon, SendIcon, MicrophoneIcon } from "@/assets/icons";
 import axios from "axios";
 import { SignedIn, useUser } from "@clerk/nextjs";
 
@@ -359,9 +360,7 @@ export default function ChatPage() {
                   onClick={() => setIsMobileSidebarOpen(true)}
                   className="md:hidden p-2 -ml-2 hover:bg-black/[.05] dark:hover:bg-white/[.1] rounded-lg transition-colors"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black dark:text-white">
-                    <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <MenuIcon className="text-black dark:text-white" />
                 </button>
               )}
               
@@ -407,9 +406,7 @@ export default function ChatPage() {
                   onClick={() => setIsMobileSidebarOpen(true)}
                   className="md:hidden p-2 -ml-2 hover:bg-black/[.05] dark:hover:bg-white/[.1] rounded-lg transition-colors"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black dark:text-white">
-                    <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  <MenuIcon className="text-black dark:text-white" />
                 </button>
               )}
               
@@ -480,11 +477,7 @@ export default function ChatPage() {
               }}
               className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-current">
-                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <polyline points="16,6 12,2 8,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <ShareIcon className="text-current" />
               Share
             </button>
           )}
@@ -521,9 +514,7 @@ export default function ChatPage() {
                 <div className="flex items-end gap-2 bg-[#f4f4f4] dark:bg-[#2f2f2f] rounded-3xl p-3 shadow-sm border border-black/[.05] dark:border-white/[.08]">
                   <div className="flex items-center gap-3 flex-1">
                     <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black/60 dark:text-white/60">
-                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66L9.64 16.2a2 2 0 01-2.83-2.83l8.49-8.49" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                    <AttachmentIcon className="text-black/60 dark:text-white/60" />
                     </button>
 
                     <textarea
@@ -543,18 +534,13 @@ export default function ChatPage() {
                     className="p-2 rounded-full bg-black text-white disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-black transition-all hover:scale-105 active:scale-95"
                     aria-label="Send message"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    <SendIcon />
                   </button>
                 </div>
                 
                 <div className="absolute right-16 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                   <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black/60 dark:text-white/60">
-                      <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" fill="currentColor"/>
-                      <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                    <MicrophoneIcon className="text-black/60 dark:text-white/60" />
                   </button>
                 </div>
               </div>

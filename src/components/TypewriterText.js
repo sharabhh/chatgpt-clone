@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 
-export default function TypewriterText({ 
+function TypewriterText({ 
   text, 
   speed = 1, // milliseconds per character
   onComplete = () => {},
@@ -48,3 +48,6 @@ export default function TypewriterText({
     </div>
   );
 }
+
+// Memoize component for performance
+export default memo(TypewriterText);
