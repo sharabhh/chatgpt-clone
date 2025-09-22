@@ -148,7 +148,7 @@ function MessageBubble({ role, content, attachments = [], onRegenerate, onEdit, 
               <div className="mt-2 flex justify-end">
                 <button
                   onClick={handleEdit}
-                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-black/10 dark:bg-white/10 text-white/80 hover:bg-black/20 dark:hover:bg-white/20 transition-colors"
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md  text-white hover:bg-black/20 dark:hover:bg-white/20 transition-colors"
                   title="Edit this message"
                   aria-label="Edit this message"
                 >

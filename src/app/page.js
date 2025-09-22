@@ -460,16 +460,24 @@ function createMessage(role, content) {
 
                   {/* Right side icons */}
                   <div className="flex items-center gap-2">
-                    <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
+                    {/* <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-black/60 dark:text-white/60">
                         <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" fill="currentColor"/>
                         <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                    </button>
+                    </button> */}
                     
-                    <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
+                    {/* <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
                       <ImageIcon className="text-black/60 dark:text-white/60" />
-                    </button>
+                    </button> */}
+                     <button
+                    onClick={handleSend}
+                    disabled={(!input.trim() && attachments.length === 0) || isSending}
+                    className="p-2 rounded-full bg-black text-white disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-black transition-all hover:scale-105 active:scale-95"
+                    aria-label="Send message"
+                  >
+                    <SendIcon />
+                  </button>
                   </div>
                 </div>
               </div>
