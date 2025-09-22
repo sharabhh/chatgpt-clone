@@ -37,7 +37,7 @@ export async function POST(request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { userId, prompt, conversationId } = body;
+    const { userId, prompt, conversationId, attachments = [] } = body;
     console.log(body);
 
     // Check if we need to summarize conversation history (only for logged-in users)
@@ -77,6 +77,17 @@ ${recentContext}
       }
     }
 
+    // Process file attachments
+    let attachmentContext = "";
+    if (attachments && attachments.length > 0) {
+      const fileDescriptions = attachments.map(file => {
+        const fileType = file.type.startsWith('image/') ? 'Image' : 'Document';
+        return `${fileType}: ${file.originalName} (${file.type}, ${Math.round(file.size / 1024)}KB)`;
+      }).join('\n');
+      
+      attachmentContext = `\n\nFiles shared by user:\n${fileDescriptions}\n\nPlease analyze these files in the context of the user's question. If the user hasn't asked a specific question, provide a helpful analysis of the uploaded files.`;
+    }
+
     // Retrieve memories for personalized context
     let personalizedPrompt = prompt;
     if (userId) {
@@ -88,18 +99,18 @@ ${recentContext}
           const relevantContext = memories
             .map((memory) => memory.memory)
             .join(". ");
-          personalizedPrompt = `Based on what I know about you: ${relevantContext}${conversationContext}\n\nUser question: ${prompt}`;
+          personalizedPrompt = `Based on what I know about you: ${relevantContext}${conversationContext}${attachmentContext}\n\nUser question: ${prompt}`;
         } else {
-          personalizedPrompt = `${conversationContext}User question: ${prompt}`;
+          personalizedPrompt = `${conversationContext}${attachmentContext}\n\nUser question: ${prompt}`;
         }
       } catch (memoryError) {
         console.log("Memory retrieval failed:", memoryError);
         // Continue with conversation context if available
-        personalizedPrompt = `${conversationContext}User question: ${prompt}`;
+        personalizedPrompt = `${conversationContext}${attachmentContext}\n\nUser question: ${prompt}`;
       }
     } else {
       // If no userId, just add conversation context
-      personalizedPrompt = `${conversationContext}User question: ${prompt}`;
+      personalizedPrompt = `${conversationContext}${attachmentContext}\n\nUser question: ${prompt}`;
     }
 
     const response = await generateText({

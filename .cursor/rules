@@ -9,6 +9,7 @@ This is a Next.js application following modern React patterns, TypeScript best p
 - Follow React best practices and hooks patterns
 - Ensure accessibility (a11y) compliance
 - Optimize for SEO and performance
+- the files shouldn't be unnecessarily long with useless logic
 
 ### Component Organization
 - Group components by feature or domain

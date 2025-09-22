@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import MessageBubble from "../components/MessageBubble";
 import TypingBubble from "../components/TypingBubble";
 import Sidebar from "../components/Sidebar";
+import FileUpload from "../components/FileUpload";
+import FileAttachment from "../components/FileAttachment";
 import { PlusIcon, MicrophoneIcon, AttachmentIcon, SendIcon, ImageIcon } from "@/assets/icons";
 import axios from "axios";
 import { SignedIn, useUser } from "@clerk/nextjs";
@@ -23,6 +25,7 @@ export default function Home() {
   const [conversations, setConversations] = useState([]);
   const [typingMessageId, setTypingMessageId] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [attachments, setAttachments] = useState([]);
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
   const { user, isLoaded } = useUser();
@@ -73,19 +76,32 @@ useEffect(() => {
     el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }, [input]);
 
+  // Handle file upload
+  const handleFileUploaded = (file) => {
+    setAttachments(prev => [...prev, file]);
+  };
+
+  // Remove attachment
+  const removeAttachment = (filename) => {
+    setAttachments(prev => prev.filter(att => att.filename !== filename));
+  };
+
   async function handleSend() {
     try {
       const trimmed = input.trim();
-      if (!trimmed || isSending) return;
+      // Allow sending if there's either text OR attachments
+      if ((!trimmed && attachments.length === 0) || isSending) return;
       
       const userMessage = {
         id: `u-${Date.now()}`,
         role: "user",
-        content: trimmed,
+        content: trimmed, // Keep original content, don't default to "Shared files"
+        attachments: [...attachments],
         messageIndex: messages.length,
       };
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
+      setAttachments([]);
       setIsSending(true);
       setIsTyping(true);
 
@@ -102,20 +118,23 @@ useEffect(() => {
         // Save user message to conversation
         await axios.post(`/api/conversations/${conversationId}`, {
           role: "user",
-          content: trimmed,
+          content: trimmed, // Keep original content
+          attachments: userMessage.attachments,
         });
 
         // Update conversation title if it's still the default and this is likely the first message
         const currentConversation = conversations.find(conv => conv._id === conversationId);
         if (currentConversation && currentConversation.title === "New Conversation") {
+          const titleText = trimmed || (userMessage.attachments.length > 0 ? `File: ${userMessage.attachments[0].originalName}` : "New Conversation");
           await axios.put("/api/conversations", {
             conversationId: conversationId,
-            title: trimmed.slice(0, 15),
+            title: titleText.slice(0, 30),
           });
         }
 
         const response = await axios.post("/api/prompts", {
-          prompt: trimmed,
+          prompt: trimmed || (attachments.length > 0 ? "Please analyze the uploaded files." : ""),
+          attachments: userMessage.attachments,
           userId: userDetails._id,
           conversationId: conversationId,
         });
@@ -145,7 +164,8 @@ useEffect(() => {
         console.log("Anonymous user - conversation will not be saved");
         
         const response = await axios.post("/api/prompts", {
-          prompt: trimmed,
+          prompt: trimmed || (userMessage.attachments.length > 0 ? "Please analyze the uploaded files." : ""),
+          attachments: userMessage.attachments,
           // No userId or conversationId for anonymous users
         });
         const data = await response.data;
@@ -388,13 +408,44 @@ function createMessage(role, content) {
             </div>
             
             <div className="w-full max-w-md md:max-w-2xl">
+              {/* Attachment previews */}
+              {attachments.length > 0 && (
+                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Attachments ({attachments.length})
+                    </span>
+                    <button
+                      onClick={() => setAttachments([])}
+                      className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                    >
+                      Remove all
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((attachment, index) => (
+                      <div key={index} className="relative">
+                        <FileAttachment attachment={attachment} className="max-w-xs" />
+                        <button
+                          onClick={() => removeAttachment(attachment.filename)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="relative">
                 <div className="flex items-end gap-2 bg-[#f4f4f4] dark:bg-[#2f2f2f] rounded-3xl p-3 shadow-sm border border-black/[.05] dark:border-white/[.08]">
                   <div className="flex items-center gap-3 flex-1">
-                    {/* Plus icon */}
-                    <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
-                      <PlusIcon className="text-black/60 dark:text-white/60" />
-                    </button>
+                    {/* File upload */}
+                    <FileUpload 
+                      onFileUploaded={handleFileUploaded}
+                      disabled={isSending}
+                    />
 
                     <textarea
                       ref={textareaRef}
@@ -437,7 +488,8 @@ function createMessage(role, content) {
               <MessageBubble 
                 key={m.id} 
                 role={m.role} 
-                content={m.content} 
+                content={m.content}
+                attachments={m.attachments || []}
                 onRegenerate={() => handleRegenerate(m.id)}
                 onEdit={(newContent) => handleEdit(m.id, newContent)}
                 isTyping={m.role === "assistant" && m.id === typingMessageId}
@@ -455,13 +507,44 @@ function createMessage(role, content) {
 
             <div className="border-t border-black/[.08] dark:border-white/[.06]">
               <div className="max-w-3xl mx-auto p-4">
+                {/* Attachment previews */}
+                {attachments.length > 0 && (
+                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Attachments ({attachments.length})
+                      </span>
+                      <button
+                        onClick={() => setAttachments([])}
+                        className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                      >
+                        Remove all
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {attachments.map((attachment, index) => (
+                        <div key={index} className="relative">
+                          <FileAttachment attachment={attachment} className="max-w-xs" />
+                          <button
+                            onClick={() => removeAttachment(attachment.filename)}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="relative">
                   <div className="flex items-end gap-2 bg-[#f4f4f4] dark:bg-[#2f2f2f] rounded-3xl p-3 shadow-sm border border-black/[.05] dark:border-white/[.08]">
                     <div className="flex items-center gap-3 flex-1">
-                      {/* Attachment icon */}
-                      <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
-                        <AttachmentIcon className="text-black/60 dark:text-white/60" />
-                      </button>
+                      {/* File upload */}
+                      <FileUpload 
+                        onFileUploaded={handleFileUploaded}
+                        disabled={isSending}
+                      />
 
                       <textarea
                         ref={textareaRef}
@@ -477,7 +560,7 @@ function createMessage(role, content) {
                   {/* Send button */}
                   <button
                     onClick={handleSend}
-                    disabled={!input.trim() || isSending}
+                    disabled={(!input.trim() && attachments.length === 0) || isSending}
                     className="p-2 rounded-full bg-black text-white disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-black transition-all hover:scale-105 active:scale-95"
                     aria-label="Send message"
                   >

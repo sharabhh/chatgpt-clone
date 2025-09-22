@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import MessageBubble from "../../../components/MessageBubble";
 import TypingBubble from "../../../components/TypingBubble";
 import Sidebar from "../../../components/Sidebar";
+import FileUpload from "../../../components/FileUpload";
+import FileAttachment from "../../../components/FileAttachment";
 import { MenuIcon, ShareIcon, AttachmentIcon, SendIcon, MicrophoneIcon } from "@/assets/icons";
 import axios from "axios";
 import { SignedIn, useUser } from "@clerk/nextjs";
@@ -24,6 +26,7 @@ export default function ChatPage() {
   const [conversationOwner, setConversationOwner] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [attachments, setAttachments] = useState([]);
   const scrollAnchorRef = useRef(null);
   const textareaRef = useRef(null);
   const { user, isLoaded } = useUser();
@@ -80,6 +83,7 @@ export default function ChatPage() {
           id: `${msg.role}-${index}`,
           role: msg.role,
           content: msg.content,
+          attachments: msg.attachments || [],
           messageIndex: index,
         }));
         setMessages(conversationMessages);
@@ -128,41 +132,57 @@ export default function ChatPage() {
     el.style.height = Math.min(el.scrollHeight, 200) + "px";
   }, [input]);
 
+  // Handle file upload
+  const handleFileUploaded = (file) => {
+    setAttachments(prev => [...prev, file]);
+  };
+
+  // Remove attachment
+  const removeAttachment = (filename) => {
+    setAttachments(prev => prev.filter(att => att.filename !== filename));
+  };
+
   async function handleSend() {
     if (isReadOnly) return; // Prevent sending in read-only mode
 
     try {
       const trimmed = input.trim();
-      if (!trimmed || isSending) return;
+      // Allow sending if there's either text OR attachments
+      if ((!trimmed && attachments.length === 0) || isSending) return;
       
       const userMessage = {
         id: `u-${Date.now()}`,
         role: "user",
-        content: trimmed,
+        content: trimmed, // Keep original content
+        attachments: [...attachments],
         messageIndex: messages.length,
       };
       setMessages((prev) => [...prev, userMessage]);
       setInput("");
+      setAttachments([]);
       setIsSending(true);
       setIsTyping(true);
 
       // Save user message to conversation
       await axios.post(`/api/conversations/${currentConversationId}`, {
         role: "user",
-        content: trimmed,
+        content: trimmed, // Keep original content
+        attachments: userMessage.attachments,
       });
 
       // Update conversation title if it's still the default
       const currentConversation = conversations.find(conv => conv._id === currentConversationId);
       if (currentConversation && currentConversation.title === "New Conversation") {
+        const titleText = trimmed || (userMessage.attachments.length > 0 ? `File: ${userMessage.attachments[0].originalName}` : "New Conversation");
         await axios.put("/api/conversations", {
           conversationId: currentConversationId,
-          title: trimmed.slice(0, 15),
+          title: titleText.slice(0, 30),
         });
       }
 
       const response = await axios.post("/api/prompts", {
-        prompt: trimmed,
+        prompt: trimmed || (userMessage.attachments.length > 0 ? "Please analyze the uploaded files." : ""),
+        attachments: userMessage.attachments,
         userId: userDetails._id,
         conversationId: currentConversationId,
       });
@@ -489,7 +509,8 @@ export default function ChatPage() {
               <MessageBubble 
                 key={m.id} 
                 role={m.role} 
-                content={m.content} 
+                content={m.content}
+                attachments={m.attachments || []}
                 onRegenerate={!isReadOnly ? () => handleRegenerate(m.id) : undefined}
                 onEdit={!isReadOnly ? (newContent) => handleEdit(m.id, newContent) : undefined}
                 isTyping={m.role === "assistant" && m.id === typingMessageId}
@@ -510,12 +531,43 @@ export default function ChatPage() {
         {!isReadOnly && (
           <div className="border-t border-black/[.08] dark:border-white/[.06]">
             <div className="max-w-3xl mx-auto p-4">
+              {/* Attachment previews */}
+              {attachments.length > 0 && (
+                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Attachments ({attachments.length})
+                    </span>
+                    <button
+                      onClick={() => setAttachments([])}
+                      className="text-xs text-red-600 dark:text-red-400 hover:underline"
+                    >
+                      Remove all
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((attachment, index) => (
+                      <div key={index} className="relative">
+                        <FileAttachment attachment={attachment} className="max-w-xs" />
+                        <button
+                          onClick={() => removeAttachment(attachment.filename)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="relative">
                 <div className="flex items-end gap-2 bg-[#f4f4f4] dark:bg-[#2f2f2f] rounded-3xl p-3 shadow-sm border border-black/[.05] dark:border-white/[.08]">
                   <div className="flex items-center gap-3 flex-1">
-                    <button className="p-1 rounded-lg hover:bg-black/[.05] dark:hover:bg-white/[.1] transition-colors">
-                    <AttachmentIcon className="text-black/60 dark:text-white/60" />
-                    </button>
+                    <FileUpload 
+                      onFileUploaded={handleFileUploaded}
+                      disabled={isSending}
+                    />
 
                     <textarea
                       ref={textareaRef}
@@ -530,7 +582,7 @@ export default function ChatPage() {
 
                   <button
                     onClick={handleSend}
-                    disabled={!input.trim() || isSending}
+                    disabled={(!input.trim() && attachments.length === 0) || isSending}
                     className="p-2 rounded-full bg-black text-white disabled:opacity-40 disabled:cursor-not-allowed dark:bg-white dark:text-black transition-all hover:scale-105 active:scale-95"
                     aria-label="Send message"
                   >

@@ -7,14 +7,16 @@ export async function POST(req, { params }) {
     console.log("Creating new message");
     await connectDB();
     const { id } = await params; // conversationId
-    const { role, content } = await req.json();
+    const { role, content, attachments = [] } = await req.json();
 
     const conversation = await Conversation.findById(id);
     if (!conversation) {
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
-    conversation.messages.push({ role, content });
+    // Handle empty content - allow it if there are attachments
+    const messageContent = content || "";
+    conversation.messages.push({ role, content: messageContent, attachments });
     await conversation.save();
 
     return NextResponse.json(conversation);
