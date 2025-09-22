@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ActionButtons from "./ActionButtons";
 import TypewriterText from "./TypewriterText";
 
-export default function MessageBubble({ role, content, onRegenerate, onEdit, isTyping = false, onTypingComplete = () => {} }) {
+export default function MessageBubble({ role, content, onRegenerate, onEdit, isTyping = false, onTypingComplete = () => {}, isReadOnly = false }) {
   const isAssistant = role === "assistant";
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
@@ -19,7 +19,7 @@ export default function MessageBubble({ role, content, onRegenerate, onEdit, isT
   }, [isEditing]);
 
   const handleEdit = () => {
-    if (!isAssistant) {
+    if (!isAssistant && !isReadOnly) {
       setIsEditing(true);
       setEditContent(content);
     }
@@ -66,7 +66,7 @@ export default function MessageBubble({ role, content, onRegenerate, onEdit, isT
           <div className="whitespace-pre-wrap leading-7 text-[15px] text-[#111] dark:text-white">
             {content}
           </div>
-          <ActionButtons content={content} onRegenerate={onRegenerate} />
+          {!isReadOnly && <ActionButtons content={content} onRegenerate={onRegenerate} />}
         </div>
       </div>
     );
@@ -111,16 +111,18 @@ export default function MessageBubble({ role, content, onRegenerate, onEdit, isT
             <div className="whitespace-pre-wrap leading-6 text-[15px] rounded-2xl px-4 py-3 bg-[#2f2f2f] text-white">
               {content}
             </div>
-            {/* Edit button - only visible on hover */}
-            <button
-              onClick={handleEdit}
-              className="absolute -left-8 top-3 p-1.5 rounded-md hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
-              title="Edit message"
-            >
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002 2h-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
+            {/* Edit button - only visible on hover and not in read-only mode */}
+            {!isReadOnly && (
+              <button
+                onClick={handleEdit}
+                className="absolute -left-8 top-3 p-1.5 rounded-md hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                title="Edit message"
+              >
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002 2h-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import MessageBubble from "../components/MessageBubble";
 import TypingBubble from "../components/TypingBubble";
 import Sidebar from "../components/Sidebar";
@@ -12,6 +13,7 @@ const initialMessages = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -89,11 +91,11 @@ useEffect(() => {
       // Check if user is logged in
       if (isLoaded && user && userDetails) {
         // LOGGED IN USER FLOW
-        // If no current conversation, create a new one with the prompt as title
+        // If no current conversation, something went wrong - shouldn't happen now
         let conversationId = currentConversationId;
         if (!conversationId) {
-          conversationId = await createNewConversation(trimmed);
-          setCurrentConversationId(conversationId);
+          console.error("No current conversation ID - this shouldn't happen");
+          return;
         }
 
         // Save user message to conversation
@@ -175,7 +177,10 @@ async function createNewConversation(firstPrompt = null) {
       clerkId: user.id,
       title: title,
     });
-    return response.data._id;
+    const conversationId = response.data._id;
+    // Update URL to reflect the new conversation
+    router.push(`/chat/${conversationId}`);
+    return conversationId;
   } catch (error) {
     console.error("Error creating conversation:", error);
     return null;
@@ -210,27 +215,22 @@ function createMessage(role, content) {
   }
 
   async function newChat() {
-    // Reset to no active conversation - new one will be created when user sends first message
-    setCurrentConversationId(null);
-    setMessages(initialMessages);
-    setInput("");
+    // Create a new conversation immediately and navigate to it
+    if (isLoaded && user && userDetails) {
+      const conversationId = await createNewConversation();
+      // createNewConversation will handle the navigation
+    } else {
+      // For anonymous users, just reset the state
+      setCurrentConversationId(null);
+      setMessages(initialMessages);
+      setInput("");
+    }
   }
 
   // Function to load messages from a specific conversation
   async function loadConversation(conversationId) {
-    try {
-      const response = await axios.get(`/api/conversations/${conversationId}`);
-      const conversationMessages = response.data.map((msg, index) => ({
-        id: `${msg.role}-${index}`,
-        role: msg.role,
-        content: msg.content,
-        messageIndex: index, // Store the index for editing
-      }));
-      setMessages(conversationMessages);
-      setCurrentConversationId(conversationId);
-    } catch (error) {
-      console.error("Error loading conversation:", error);
-    }
+    // Navigate to the chat URL instead of loading in place
+    router.push(`/chat/${conversationId}`);
   }
 
   async function handleRegenerate(messageId) {
