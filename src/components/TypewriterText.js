@@ -37,10 +37,10 @@ export default function TypewriterText({
   return (
     <div className="group flex gap-3 py-4">
       <div className="flex-1">
-        <div className="whitespace-pre-wrap leading-7 text-[15px] text-white">
+        <div className="whitespace-pre-wrap leading-7 text-[15px] text-[#111] dark:text-white">
           {displayText}
           {!isComplete && (
-            <span className="animate-pulse text-white/60">|</span>
+            <span className="animate-pulse text-[#111]/60 dark:text-white/60">|</span>
           )}
         </div>
         {isComplete && showActionButtons && actionButtonsComponent}

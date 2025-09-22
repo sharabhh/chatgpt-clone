@@ -63,7 +63,7 @@ export default function MessageBubble({ role, content, onRegenerate, onEdit, isT
     return (
       <div className="group flex gap-3 py-4">
         <div className="flex-1">
-          <div className="whitespace-pre-wrap leading-7 text-[15px] text-white">
+          <div className="whitespace-pre-wrap leading-7 text-[15px] text-[#111] dark:text-white">
             {content}
           </div>
           <ActionButtons content={content} onRegenerate={onRegenerate} />
