@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
+import { put } from '@vercel/blob';
 import path from "path";
-import { existsSync } from "fs";
 import crypto from "crypto";
 
 // Security configurations
@@ -132,18 +131,14 @@ export async function POST(request) {
       );
     }
 
-    // Create upload directory if it doesn't exist
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    // Generate secure filename
+    // Generate secure filename for blob storage
     const secureFilename = generateSecureFilename(file.name);
-    const filePath = path.join(uploadDir, secureFilename);
 
-    // Write file to disk
-    await writeFile(filePath, buffer);
+    // Upload file to Vercel Blob storage
+    const blob = await put(secureFilename, buffer, {
+      access: 'public',
+      contentType: file.type,
+    });
 
     // Return file information
     const fileInfo = {
@@ -151,7 +146,7 @@ export async function POST(request) {
       originalName: file.name,
       size: file.size,
       type: file.type,
-      url: `/uploads/${secureFilename}`,
+      url: blob.url,
       uploadedAt: new Date().toISOString()
     };
 

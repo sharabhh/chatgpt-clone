@@ -12,6 +12,7 @@
     "@ai-sdk/anthropic": "^2.0.17",
     "@ai-sdk/google": "^2.0.14",
     "@clerk/nextjs": "^6.32.0",
+    "@vercel/blob": "^2.0.0",
     "ai": "^5.0.45",
     "axios": "^1.12.2",
     "mem0ai": "^2.1.38",
